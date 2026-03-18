@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row g-4 mb-5">
+    <!-- Summary cards -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <div class="fs-1 mb-2 text-primary">
+                <i class="bi bi-door-closed-fill"></i>
+            </div>
+            <h5>Total Rooms</h5>
+            <p class="display-6 fw-bold">{{ total_rooms }}</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <div class="fs-1 mb-2 text-success">
+                <i class="bi bi-desktop-fill"></i>
+            </div>
+            <h5>Total Units</h5>
+            <p class="display-6 fw-bold">{{ total_units }}</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <div class="fs-1 mb-2 text-warning">
+                <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <h5>Total Inspections</h5>
+            <p class="display-6 fw-bold">{{ total_inspections }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Laboratory Rooms Table -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Laboratory Rooms</h2>
+    <a href="#" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Room
+    </a>
+</div>
+
+<table class="table table-hover shadow-sm bg-white rounded">
+    <thead class="table-light text-uppercase small">
+        <tr>
+            <th scope="col">Lab Name</th>
+            <th scope="col">Location</th>
+            <th scope="col">Capacity</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="text-end">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rooms in room %}
+            <tr>
+                <td>{{ rooms.room_name }}</td>
+                <td>{{ rooms.location }}</td>
+                <td>{{ rooms.capacity|default:"N/A" }}</td>
+                <td>
+                    {% if rooms.status == "Operational" %}
+                        <span class="status-badge status-operational">Operational</span>
+                    {% elif rooms.status == "Maintenance" %}
+                        <span class="status-badge status-maintenance">Maintenance</span>
+                    {% else %}
+                        <span class="text-muted">Unknown</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{% url 'room' rooms.id %}" class="link-primary fw-semibold">View Details</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">No laboratory rooms found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+<nav aria-label="Rooms pagination">
+    <ul class="pagination justify-content-end">
+        {% if rooms.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ rooms.previous_page_number }}" aria-label="Previous">
+                    &laquo; Previous
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ rooms.number }} of {{ rooms.paginator.num_pages }}</span></li>
+
+        {% if rooms.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ rooms.next_page_number }}" aria-label="Next">
+                    Next &raquo;
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+<h1>{{ room.room_name }}</h1>
+
+<h2>Computer Units</h2>
+<ul>
+    {% for unit in units %}
+        <li>{{ unit.asset_tag }} - {{ unit.status }}</li>
+    {% endfor %}
+</ul>
