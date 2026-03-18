@@ -5,36 +5,65 @@
 <h1 class="mb-4">Dashboard</h1>
 
 <div class="row g-4 mb-5">
-    <!-- Summary cards -->
+
+    <!-- Total Rooms -->
     <div class="col-md-4">
-        <div class="card shadow-sm p-3 text-center">
-            <div class="fs-1 mb-2 text-primary">
-                <i class="bi bi-door-closed-fill"></i>
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+            
+            <!-- Icon -->
+            <div class="me-3 p-3 bg-light rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-landmark-icon lucide-landmark">
+                    <path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/>
+                </svg>
             </div>
-            <h5>Total Rooms</h5>
-            <p class="display-6 fw-bold">{{ total_rooms }}</p>
+
+            <!-- Text -->
+            <div>
+                <div class="text-muted small">Total Rooms</div>
+                <div class="fs-4 fw-bold">{{ total_rooms }}</div>
+            </div>
+
         </div>
     </div>
 
+    <!-- Total Units -->
     <div class="col-md-4">
-        <div class="card shadow-sm p-3 text-center">
-            <div class="fs-1 mb-2 text-success">
-                <i class="bi bi-desktop-fill"></i>
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+
+            <div class="me-3 p-3 bg-light rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+                    <path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z"/>
+                    <path d="M20.054 15.987H3.946"/>
+                </svg>
             </div>
-            <h5>Total Units</h5>
-            <p class="display-6 fw-bold">{{ total_units }}</p>
+
+            <div>
+                <div class="text-muted small">Total Units</div>
+                <div class="fs-4 fw-bold">{{ total_units }}</div>
+            </div>
+
         </div>
     </div>
 
+    <!-- Total Inspections -->
     <div class="col-md-4">
-        <div class="card shadow-sm p-3 text-center">
-            <div class="fs-1 mb-2 text-warning">
-                <i class="bi bi-clipboard-check-fill"></i>
+        <div class="card shadow-sm border-0 p-3 d-flex flex-row align-items-center">
+
+            <div class="me-3 p-3 bg-light rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                    <path d="M12 8v4"/><path d="M12 16h.01"/>
+                </svg>
             </div>
-            <h5>Total Inspections</h5>
-            <p class="display-6 fw-bold">{{ total_inspections }}</p>
+
+            <div>
+                <div class="text-muted small">Total Inspections</div>
+                <div class="fs-4 fw-bold">{{ total_inspections }}</div>
+            </div>
+
         </div>
     </div>
+
 </div>
 
 <!-- Laboratory Rooms Table -->
@@ -45,44 +74,55 @@
     </a>
 </div>
 
-<table class="table table-hover shadow-sm bg-white rounded">
-    <thead class="table-light text-uppercase small">
-        <tr>
-            <th scope="col">Lab Name</th>
-            <th scope="col">Location</th>
-            <th scope="col">Capacity</th>
-            <th scope="col">Status</th>
-            <th scope="col" class="text-end">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for rooms in room %}
-            <tr>
-                <td>{{ rooms.room_name }}</td>
-                <td>{{ rooms.location }}</td>
-                <td>{{ rooms.capacity|default:"N/A" }}</td>
-                <td>
-                    {% if rooms.status == "Operational" %}
-                        <span class="status-badge status-operational">Operational</span>
-                    {% elif rooms.status == "Maintenance" %}
-                        <span class="status-badge status-maintenance">Maintenance</span>
-                    {% else %}
-                        <span class="text-muted">Unknown</span>
-                    {% endif %}
-                </td>
-                <td class="text-end">
-                    <a href="{% url 'room' rooms.id %}" class="link-primary fw-semibold">View Details</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="5" class="text-center text-muted">No laboratory rooms found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-uppercase small">
+                <tr>
+                    <th class="py-3 px-3">Room Name</th>
+                    <th class="py-3 px-3">Location</th>
+                    <th class="py-3 px-3">Capacity</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-3 text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for room in rooms %}
+                <tr>
+                    <td class="py-3 px-3 fw-semibold">{{ room.room_name }}</td>
+                    <td class="py-3 px-3">{{ room.location }}</td>
+                    <td class="py-3 px-3">{{ room.capacity|default:"N/A" }}</td>
+                    <td class="py-3 px-3">
+                        {% if room.status == "Operational" %}
+                            <span class="badge bg-success-subtle text-success">Operational</span>
+                        {% elif room.status == "Maintenance" %}
+                            <span class="badge bg-warning-subtle text-warning">Maintenance</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-3 text-end">
+                        <a href="{% url 'room' room.id %}" class="btn btn-sm btn-primary">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No laboratory rooms found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
 
 <!-- Pagination -->
 <nav aria-label="Rooms pagination">
-    <ul class="pagination justify-content-end">
+    <ul class="pagination  justify-content-center my-4">
         {% if rooms.has_previous %}
             <li class="page-item">
                 <a class="page-link" href="?page={{ rooms.previous_page_number }}" aria-label="Previous">
@@ -106,5 +146,6 @@
         {% endif %}
     </ul>
 </nav>
+</div>
 
 {% endblock %}
