@@ -1,8 +1,0 @@
-#!/home/mordz/im_proj/venv/bin/python3
-
-
-from wireguard.cli import cli
-
-
-if __name__ == "__main__":
-    cli()

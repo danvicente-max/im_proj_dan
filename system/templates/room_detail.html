@@ -1,8 +1,162 @@
-<h1>{{ room.room_name }}</h1>
+{% extends "base.html" %}
+{% block content %}
 
-<h2>Computer Units</h2>
-<ul>
-    {% for unit in units %}
-        <li>{{ unit.asset_tag }} - {{ unit.status }}</li>
-    {% endfor %}
-</ul>
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor"
+                class="bi bi-arrow-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                    d="M15 8a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 
+                    0-.708l4-4a.5.5 0 1 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+            </svg>
+            <h4 class="fw-bold">
+                {{ room.room_name }} - Information Technology Lab
+            </h4>
+
+            <small class="text-muted">
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                fill="red" viewBox="0 0 16 16">
+                    <path d="M8 16s6-5.686 6-10A6 6 0 1 0 2 6c0 4.314 6 10 6 10z"/>
+                    <circle cx="8" cy="6" r="2"/>
+                </svg>
+                {{ room.location }}
+            </small>
+        </div>
+
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+            + Add Unit
+        </button>
+
+    </div>
+
+
+<!-- SUMMARY CARDS -->
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Total Units</small>
+                    <h4 class="fw-bold">{{ total_units }}</h4>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <small class="text-muted">Working</small>
+                    <h4 class="text-success fw-bold">{{ working }}</h4>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <small class="text-muted">Defective</small>
+                    <h4 class="text-danger fw-bold">{{ defective }}</h4>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <small class="text-muted">Maintenance</small>
+                    <h4 class="text-warning fw-bold">{{ maintenance }}</h4>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+<!-- COMPUTER UNITS TABLE -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+            
+
+            <h6 class="fw-bold mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                    fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 
+                        1H9.5l1.5 2H5l1.5-2H2a1 1 0 0 1-1-1V3z"/>
+                </svg>
+                Computer Units</h6>
+
+            <table class="table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Asset Tag</th>
+                        <th>Status</th>
+                        <th>CPU</th>
+                        <th>RAM</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for unit in units %}
+
+                    <tr>
+
+                        <td>{{ unit.asset_tag }}</td>
+
+                        <td>
+                            <span class="badge bg-success">
+                                {{ unit.status }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ unit.hardware.cpu }}
+                        </td>
+
+                        <td>
+                            {{ unit.hardware.ram }}
+                        </td>
+
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% include "pagination.html" with page_obj=units %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% include "unit_modal.html" %}
+
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold">Laboratory Rooms</h4>
+
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabModal">
+            + Add Lab
+        </button>
+    </div>
+
+
+    <!-- Search Bar -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <input type="text" class="form-control" placeholder="Search laboratory...">
+        </div>
+    </div>
+
+
+    <!-- Laboratory List -->
+    <div class="card shadow-sm">
+        <div class="list-group list-group-flush">
+
+            {% for room in rooms %}
+
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div class="d-flex align-items-center">
+
+                    <span class="badge bg-secondary me-3">
+                        {{ forloop.counter }}
+                    </span>
+
+                <div>
+                    <h6 class="mb-0 fw-bold">{{ room.room_name }}</h6>
+                    <small class="text-muted">{{ room.location }}</small>
+                </div>
+
+            </div>
+
+            <div>
+                <a href="/room/{{ room.id }}" class="btn btn-sm btn-outline-primary me-2">
+                    View
+                </a>
+
+                <button class="btn btn-sm btn-outline-danger delete-btn" data-room-id="{{ room.id }}" data-bs-toggle="modal" data-bs-target="#deleteLabModal">
+                    Delete
+                </button>
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="list-group-item text-center text-muted">
+            No laboratory rooms found.
+        </div>
+
+        {% endfor %}
+
+        
+</div>
+
+
+{% include "pagination.html" with page_obj=rooms %}
+</div>
+{% include "lab_modal.html" %}
+
+{% endblock %}
