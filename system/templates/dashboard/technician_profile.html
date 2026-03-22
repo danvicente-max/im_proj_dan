@@ -1,0 +1,86 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Profile | {{ technician.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 mt-2">
+    <div class="d-flex align-items-center mb-4">
+        <button class="btn btn-link text-dark p-0 me-3" onclick="history.back()">
+            <i class="bi bi-arrow-left-circle fs-4"></i>
+        </button>
+        <h2 class="fw-bold mb-0">Staff Profile</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-4">
+                <div class="mx-auto mb-3 d-flex justify-content-center align-items-center bg-dark text-white rounded-circle" 
+                     style="width: 100px; height: 100px; font-size: 32px; font-weight: 800; letter-spacing: -1px;">
+                    {{ technician.initials }}
+                </div>
+                <h4 class="fw-bold mb-1">{{ technician.name }}</h4>
+                <p class="text-muted small text-uppercase fw-bold mb-3" style="letter-spacing: 1px;">
+                    {{ technician.specialty|default:"Systems Technician" }}
+                </p>
+                
+                {% if technician.status == "Active" %}
+                    <span class="badge bg-dark rounded-pill px-4 py-2 w-100">ACTIVE PERSONNEL</span>
+                {% else %}
+                    <span class="badge border border-dark text-dark rounded-pill px-4 py-2 w-100">INACTIVE / OFF-DUTY</span>
+                {% endif %}
+                
+                <hr class="my-4">
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'edit_technician' technician.id %}" class="btn btn-black">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                    </a>
+                    <a href="{% url 'technicians' %}" class="btn btn-outline-dark border-0 small">
+                        View Staff Directory
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="fw-bold mb-0">Personnel Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Email Address</div>
+                        <div class="col-sm-8 fw-bold">
+                            <a href="mailto:{{ technician.email }}" class="text-dark text-decoration-none">
+                                {{ technician.email }} <i class="bi bi-box-arrow-up-right ms-1 small opacity-50"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Contact Number</div>
+                        <div class="col-sm-8 fw-bold">{{ technician.phone|default:"Unlisted" }}</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mt-4">
+                        <h6 class="text-muted small fw-bold text-uppercase mb-3">Professional Remarks & Notes</h6>
+                        <div class="p-3 bg-light border-start border-4 border-dark rounded-0">
+                            <p class="mb-0 text-dark small italic" style="line-height: 1.6;">
+                                {{ technician.notes|default:"No additional operational notes recorded for this personnel." }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 11px;">Recent Audit Activity</h6>
+                <div class="card border-0 shadow-sm p-3">
+                    <small class="text-muted italic text-center py-2">Activity tracking for this user will appear here after the next synchronization.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

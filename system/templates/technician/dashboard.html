@@ -2,101 +2,118 @@
 
 {% block content %}
 <div class="container-fluid">
+
+    <!-- HEADER -->
     <div class="mb-4">
         <small class="text-muted text-uppercase fw-bold">System Overview</small>
         <h3 class="fw-bold">Technician Dashboard</h3>
     </div>
 
+    <!-- STATS -->
     <div class="row g-4 mb-5">
+
         <div class="col-md-4">
             <div class="card p-4 bg-dark text-white">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <i class="bi bi-pc-display-horizontal fs-4"></i>
-                    <small class="text-white-50">ACTIVE SERVICE</small>
-                </div>
-                <h1 class="display-5 fw-bold mb-0">04</h1>
+                <small class="text-white-50">ACTIVE SERVICE</small>
+                <h1 class="display-5 fw-bold">{{ total_labs }}</h1>
                 <p class="mb-0 text-white-50">Assigned Labs</p>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card p-4 bg-white border">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <i class="bi bi-exclamation-triangle fs-4 text-dark"></i>
-                    <small class="text-muted">ACTION REQUIRED</small>
-                </div>
-                <h1 class="display-5 fw-bold mb-0 text-dark">12</h1>
-                <p class="mb-0 text-muted">Pending Inspections</p>
+                <small class="text-muted">ACTION REQUIRED</small>
+                <h1 class="display-5 fw-bold text-dark">
+                    {{ pending_inspections }}
+                </h1>
+                <p class="text-muted mb-0">Pending Inspections</p>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card p-4 bg-light border">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <i class="bi bi-shield-check fs-4"></i>
-                    <small class="text-muted">SYSTEM STATUS</small>
-                </div>
-                <h1 class="display-5 fw-bold mb-0 text-dark">Optimal</h1>
-                <p class="mb-0 text-muted">Network Load: 14.2%</p>
+                <small class="text-muted">COMPLETED</small>
+                <h1 class="display-5 fw-bold text-dark">
+                    {{ completed_inspections }}
+                </h1>
+                <p class="text-muted mb-0">Finished Tasks</p>
             </div>
         </div>
+
     </div>
 
-    <div class="row mb-5">
+    <!-- LABS -->
+    <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-end mb-3">
             <h5 class="fw-bold mb-0">Your Labs</h5>
-            <a href="#" class="text-dark small text-decoration-none">View Map <i class="bi bi-arrow-right"></i></a>
         </div>
-        
-        <div class="col-md-6">
+
+        {% for lab in assigned_rooms %}
+        <div class="col-md-6 mb-4">
             <div class="card overflow-hidden">
-                <div style="height: 120px; background: #333; display: flex; align-items: center; justify-content: center;">
-                    <span class="text-white opacity-25 fw-bold fs-1">LAB_A</span>
+
+                <!-- LAB HEADER -->
+                <div style="height:120px; background:#333; display:flex; align-items:center; justify-content:center;">
+                    <span class="text-white opacity-25 fw-bold fs-1">
+                        {{ lab.room_name|upper }}
+                    </span>
                 </div>
+
                 <div class="card-body">
+
+                    <!-- TITLE -->
                     <div class="d-flex justify-content-between">
-                        <h6 class="fw-bold">PC Lab - North Wing</h6>
-                        <span class="status-pill">Active</span>
+                        <h6 class="fw-bold">{{ lab.room_name }}</h6>
+
+                        {% if lab.working_units == lab.total_units %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Maintenance</span>
+                        {% endif %}
                     </div>
-                    <hr class="my-3">
+
+                    <hr>
+
+                    <!-- STATS -->
                     <div class="row text-center small">
                         <div class="col-6 border-end">
                             <p class="text-muted mb-0">LAST INSPECTED</p>
-                            <strong>MAR 12, 2026</strong>
+                            <strong>
+                                {% if lab.last_inspected %}
+                                    {{ lab.last_inspected|date:"M d, Y" }}
+                                {% else %}
+                                    No Data
+                                {% endif %}
+                            </strong>
                         </div>
+
                         <div class="col-6">
                             <p class="text-muted mb-0">STATIONS</p>
-                            <strong>30 / 30 UP</strong>
+                            <strong>
+                                {{ lab.working_units }} / {{ lab.total_units }}
+                            </strong>
                         </div>
                     </div>
-                    <button class="btn btn-black w-100 mt-4 py-2">Enter Lab System</button>
+
+                    <!-- BUTTON -->
+                    <a href="{% url 'room' lab.id %}" 
+                       class="btn btn-dark w-100 mt-4">
+                        Enter Lab System
+                    </a>
+
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card overflow-hidden">
-                <div style="height: 120px; background: #eee; display: flex; align-items: center; justify-content: center;">
-                    <span class="text-muted opacity-50 fw-bold fs-1">LAB_B</span>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="fw-bold">Hardware Dev Studio</h6>
-                        <span class="status-pill border-danger text-danger">Maint Required</span>
-                    </div>
-                    <hr class="my-3">
-                    <div class="row text-center small">
-                        <div class="col-6 border-end">
-                            <p class="text-muted mb-0">LAST INSPECTED</p>
-                            <strong>FEB 20, 2026</strong>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted mb-0">STATIONS</p>
-                            <strong>24 / 30 UP</strong>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline-dark w-100 mt-4 py-2">Enter Lab System</button>
-                </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-secondary text-center">
+                No assigned laboratories.
             </div>
         </div>
+        {% endfor %}
+
     </div>
+
 </div>
 {% endblock %}

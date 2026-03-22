@@ -1,0 +1,139 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ room.room_name }} Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 mt-2">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-link text-dark p-0 me-3" onclick="history.back()">
+                <i class="bi bi-arrow-left-circle fs-4"></i>
+            </button>
+            <div>
+                <h2 class="fw-bold mb-0">{{ room.room_name }}</h2>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="bi bi-geo-alt-fill me-1"></i>{{ room.location }} | Information Technology Lab
+                </small>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-black px-4" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                <i class="bi bi-plus-lg me-2"></i>Add Unit
+            </button>
+            <button class="btn btn-outline-danger px-3 border-0" data-bs-toggle="modal" data-bs-target="#deleteLabModal">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Total Units</small>
+                <h3 class="fw-bold mb-0">{{ total_units }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 border-start border-4 border-dark">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Working</small>
+                <h3 class="fw-bold mb-0">{{ total_working }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 border-start border-4 border-secondary">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Maintenance</small>
+                <h3 class="fw-bold mb-0">{{ total_maintenance }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 bg-light">
+                <small class="text-dark fw-bold text-uppercase" style="font-size: 10px;">Defective</small>
+                <h3 class="fw-bold mb-0">{{ total_defective }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-muted text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <th class="py-3 px-4">Asset Tag</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3">CPU / Processor</th>
+                        <th class="py-3">RAM</th>
+                        <th class="py-3">Storage</th>
+                        <th class="py-3 px-4 text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for unit in units %}
+                    <tr>
+                        <td class="py-3 px-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-pc me-2 text-dark"></i>
+                                <span class="fw-bold">{{ unit.asset_tag }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if unit.status == 'Working' %}
+                                <span class="badge bg-dark rounded-pill px-3 py-2">WORKING</span>
+                            {% elif unit.status == 'Defective' %}
+                                <span class="badge border border-dark text-dark rounded-pill px-3 py-2">DEFECTIVE</span>
+                            {% elif unit.status == 'Maintenance' %}
+                                <span class="badge bg-light text-dark border rounded-pill px-3 py-2">SERVICE</span>
+                            {% else %}
+                                <span class="badge bg-white text-muted border rounded-pill px-3 py-2 opacity-50">{{ unit.status }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="small fw-semibold">{{ unit.hardware.cpu|default:"---" }}</td>
+                        <td class="small">{{ unit.hardware.ram|default:"---" }}</td>
+                        <td class="small text-muted">{{ unit.hardware.storage|default:"---" }}</td>
+
+                        <td class="py-3 px-4 text-end">
+                            <a href="{% url 'view_unit' unit.id %}" class="btn btn-sm btn-outline-dark px-3">
+                                View Specs
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-hdd-stack fs-2 d-block mb-2"></i>
+                            No units registered in this laboratory.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card-footer bg-white border-top py-3">
+            {% include "dashboard/pagination.html" with page_obj=units %}
+        </div>
+    </div>
+</div>
+
+{% include "dashboard/modal/unit_modal.html" %}
+
+<div class="modal fade" id="deleteLabModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" action="{% url 'delete_lab' room.id %}">
+                {% csrf_token %}
+                <div class="modal-body p-4 text-center">
+                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3"></i>
+                    <h5 class="fw-bold">Confirm Deletion</h5>
+                    <p class="text-muted small">Are you sure you want to remove <strong>{{ room.room_name }}</strong> from the registry? This action is permanent.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4">Delete Lab</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

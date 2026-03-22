@@ -1,0 +1,72 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+
+<div class="container-fluid px-4 mt-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-link text-dark p-0 me-3" onclick="history.back()">
+                <i class="bi bi-arrow-left-circle fs-4"></i>
+            </button>
+            <h2 class="fw-bold mb-0">Laboratory Rooms</h2>
+        </div>
+        <button class="btn btn-black px-4" data-bs-toggle="modal" data-bs-target="#addLabModal">
+            <i class="bi bi-plus-lg me-2"></i>Add Lab
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-2">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-0 shadow-none" placeholder="Filter by room name or location...">
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="list-group list-group-flush">
+            {% for room in rooms %}
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4 hover-bg-light">
+                <div class="d-flex align-items-center">
+                    <span class="text-muted fw-bold me-4" style="width: 25px; font-size: 0.8rem;">
+                        {{ forloop.counter|stringformat:"02d" }}
+                    </span>
+
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">{{ room.room_name }}</h6>
+                        <small class="text-muted text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                            <i class="bi bi-geo-alt me-1"></i>{{ room.location }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'room' room.id %}" class="btn btn-sm btn-outline-dark px-3">
+                        View Details
+                    </a>
+                    <button class="btn btn-sm btn-light border delete-btn" 
+                            data-room-id="{{ room.id }}" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteLabModal">
+                        <i class="bi bi-trash text-muted"></i>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="list-group-item text-center py-5">
+                <i class="bi bi-building-exclamation fs-1 text-muted d-block mb-3"></i>
+                <p class="text-muted mb-0">No laboratory rooms found in the registry.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card-footer bg-white border-top py-3">
+            {% include "dashboard/pagination.html" with page_obj=rooms %}
+        </div>
+    </div>
+</div>
+
+{% include "dashboard/modal/lab_modal.html" %}
+
+
+{% endblock %}

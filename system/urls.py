@@ -19,8 +19,6 @@ urlpatterns = [
     
     path('unit/<int:unit_id>/', views.view_unit, name='view_unit'),
 
-    path("add-lab/", views.add_lab, name="add_lab"),
-    path("delete-lab/<int:room_id>/", views.delete_lab, name="delete_lab"),
 
     path("add-unit/", views.add_unit, name="add_unit"),
     path("delete-unit/<int:unit_id>/", views.delete_unit, name="delete_unit"),
@@ -39,3 +37,4 @@ urlpatterns = [
     path("inspection-history/", views.inspection_history, name="inspection_history"),
 
 ]
+

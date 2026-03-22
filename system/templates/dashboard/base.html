@@ -70,32 +70,26 @@
         
         <ul class="nav flex-column mb-auto">
             <li class="nav-item">
-                <a href="{% url 'tech_dashboard' %}" 
+                <a href="{% url 'dashboard' %}" 
                 class="nav-link {% if request.resolver_match.url_name == 'tech_dashboard' %}active{% endif %}">
                 <i class="bi bi-grid-fill me-3"></i> Dashboard
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'assigned_laboratories' %}" 
+                <a href="{% url 'laboratory' %}" 
                 class="nav-link {% if request.resolver_match.url_name == 'assigned_laboratories' %}active{% endif %}">
-                <i class="bi bi-clipboard-check me-3"></i> Assigned Laboratories
+                <i class="bi bi-clipboard-check me-3"></i> Laboratory
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'inspection_form' %}" 
+                <a href="{% url 'report' %}" 
                 class="nav-link {% if request.resolver_match.url_name == 'inspection_form' %}active{% endif %}">
-                <i class="bi bi-pc-display me-3"></i> Inspection Form
+                <i class="bi bi-pc-display me-3"></i> Report
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="{% url 'inspection_history' %}" 
-                class="nav-link {% if request.resolver_match.url_name == 'inspection_history' %}active{% endif %}">
-                <i class="bi bi-calendar-event me-3"></i> Inspection History
-                </a>
-            </li>        
         </ul>
 
         <div class="mt-auto px-4">

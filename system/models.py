@@ -82,8 +82,11 @@ class Technician(models.Model):
     specialty = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
-        return self.user.get.full_name() or self.user.username
-
+        try:
+            return self.user.get_full_name() or self.user.username
+        except:
+            return f"Technician #{self.id} (No User)"    
+        
 class AssessmentPeriod(models.Model):
     semester = models.CharField(max_length=20)
     school_year = models.CharField(max_length=20)
@@ -95,17 +98,17 @@ class AssessmentPeriod(models.Model):
 
 
 class Inspection(models.Model):
-    unit = models.ForeignKey(ComputerUnit, on_delete=models.CASCADE,related_name='inspection')
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+    ]
+
+    unit = models.ForeignKey(ComputerUnit, on_delete=models.CASCADE, related_name='inspection')
     technician = models.ForeignKey(Technician, on_delete=models.CASCADE)
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE)
-    room = models.ForeignKey(
-        LabRoom, 
-        on_delete=models.CASCADE,
-        default = 9)    
     date_checked = models.DateField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Inspection {self.id}"
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
 class ConditionRating(models.Model):
     inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE, related_name='rating')

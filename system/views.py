@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from datetime import date
-from django.db.models import Prefetch, IntegerField, Q
+from django.db.models import Prefetch, IntegerField, Q, Count, Max
 from django.db.models.functions import Cast, Substr
 from django.urls import reverse
 from django.contrib import messages
@@ -100,13 +100,14 @@ def dashboard(request):
     page_number = request.GET.get('page', 1)
     rooms = paginator.get_page(page_number)
 
-    return render(request, 'dashboard.html', {
+    return render(request, 'dashboard/dashboard.html', {
         'total_rooms': total_rooms,
         'total_units': total_units,
         'total_inspections': total_inspections,
         'rooms': rooms,
     })
 
+@login_required
 def room_detail(request, room_id):
     # Fetch the room
     room = get_object_or_404(LabRoom, pk=room_id)
@@ -136,15 +137,42 @@ def room_detail(request, room_id):
         'total_maintenance': total_maintenance,
     }
 
-    return render(request, 'room_detail.html', context)# ---------------------------
+    return render(request, 'dashboard/room_detail.html', context)
 
+@login_required
 def laboratory(request):
+    if request.method == "POST":
+        room_name = request.POST.get("room_name")
+        location = request.POST.get("location")
+        capacity = request.POST.get("capacity") or 0
+
+        if room_name and location:
+            LabRoom.objects.create(
+                room_name=room_name,
+                location=location,
+                capacity=capacity
+            )
+            messages.success(request, f"Lab '{room_name}' added successfully.")
+        else:
+            messages.error(request, "Room name and location are required.")
+
+        return redirect("laboratory")  # Stay on the same page
+
+    delete_id = request.GET.get("delete")
+    if delete_id:
+        room = get_object_or_404(LabRoom, id=delete_id)
+        room.delete()
+        messages.success(request, f"Lab '{room.room_name}' deleted successfully.")
+        return redirect("laboratory")
+
     rooms_qs = LabRoom.objects.all().order_by('room_name')
     paginator = Paginator(rooms_qs, 10)
     page_number = request.GET.get('page', 1)
     rooms = paginator.get_page(page_number)
-    return render(request, 'laboratory.html', {'rooms': rooms})
 
+    return render(request, 'dashboard/laboratory.html', {'rooms': rooms})
+
+@login_required
 def report(request):
     school_year = request.GET.get('school_year')
 
@@ -170,26 +198,8 @@ def report(request):
         'rooms': rooms,
         'school_year': school_year,
     }
-    return render(request, 'report.html', context)
+    return render(request, 'dashboard/report.html', context)
 
-def add_lab(request):
-    if request.method == "POST":
-        room_name = request.POST.get("room_name")
-        location = request.POST.get("location")
-        capacity = request.POST.get("capacity")
-
-        LabRoom.objects.create(
-            room_name=room_name,
-            location=location,
-            capacity=capacity
-        )
-
-    return redirect("dashboard")
-
-def delete_lab(request, room_id):
-    room = get_object_or_404(LabRoom, id=room_id)
-    room.delete()
-    return redirect("laboratory")
 
 def add_unit(request):
     if request.method == "POST":
@@ -311,68 +321,6 @@ def view_unit(request, unit_id):
     }
 
     return render(request, "view_unit.html", context)
-
-def inspection_form(request):
-    rooms = LabRoom.objects.all().order_by('room_name')
-    selected_lab_id = request.GET.get('lab')
-    periods = AssessmentPeriod.objects.all().order_by('-date_start')
-    
-    units = []
-    equipments = []
-
-    if selected_lab_id:
-        units = ComputerUnit.objects.filter(room_id=selected_lab_id)
-        equipments = Equipment.objects.filter(unit__room_id=selected_lab_id).select_related('unit')
-
-    if request.method == "POST":
-        room_id = request.POST.get("room")
-        period_id = request.POST.get("period_id")
-        equipment_id = request.POST.get("equipment_id")
-        condition = request.POST.get("condition")
-        remarks = request.POST.get("remarks", "")
-
-        room = get_object_or_404(LabRoom, id=room_id)
-        period = get_object_or_404(AssessmentPeriod, id=period_id)
-        equipment = get_object_or_404(Equipment, id=equipment_id)
-        unit = equipment.unit
-
-        # Update unit status
-        unit.status = condition
-        unit.save()
-
-        # Ensure Hardware and Software exist
-        Hardware.objects.get_or_create(unit=unit, defaults={'cpu':'-', 'ram':'-', 'gpu':'-', 'storage':'-'})
-        Software.objects.get_or_create(unit=unit, defaults={'os':'-', 'installed_apps':'-'})
-
-        # Use a default technician
-        technician = Technician.objects.get(email=request.user.email)
-        # Create or get inspection
-        inspection, _ = Inspection.objects.get_or_create(
-            unit=unit,
-            period=period,
-            defaults={'technician': technician, 'date_checked': date.today()}
-        )
-
-        # Update or create condition rating
-        ConditionRating.objects.update_or_create(
-            inspection=inspection,
-            defaults={
-                'hardware_condition': condition,
-                'software_condition': condition,
-                'remarks': remarks
-            }
-        )
-
-        messages.success(request, f"Inspection for {unit.asset_tag} recorded successfully.")
-        return redirect(f"{reverse('report')}?school_year={period.school_year}")
-
-    return render(request, "technician/form.html", {
-        "rooms": rooms,
-        "units": units,
-        "equipments": equipments,
-        "periods": periods,
-        "selected_lab_id": int(selected_lab_id) if selected_lab_id else None,
-    })
 
 def view_inspection_details(request, room_id):
     school_year = request.GET.get('school_year')
@@ -515,38 +463,47 @@ def technician_profile(request):
 # TECHNICIAN
 @login_required
 def tech_dashboard(request):
-    technician = Technician.objects.get(email=request.user.email)
+    technician = Technician.objects.filter(user=request.user).first()
+
+    if not technician:
+        messages.error(request, "Technician profile not found.")
+        return redirect("login")
+
+    # Assigned labs (based on inspections)
+    assigned_rooms = LabRoom.objects.filter(
+        computerunit__inspection__technician=technician
+    ).distinct()
+
+    # Annotate lab stats
+    assigned_rooms = assigned_rooms.annotate(
+        total_units=Count('computerunit', distinct=True),
+        working_units=Count('computerunit', filter=Q(computerunit__status='Working')),
+        last_inspected=Max('computerunit__inspection__date_checked')
+    )
+
+    # Inspection stats
+    inspections = Inspection.objects.filter(technician=technician)
+
+    context = {
+        "assigned_rooms": assigned_rooms,
+        "total_labs": assigned_rooms.count(),
+        "pending_inspections": inspections.filter(status='Pending').count(),
+        "completed_inspections": inspections.filter(status='Completed').count(),
+    }
+
+    return render(request, 'technician/dashboard.html', context)
+
+@login_required
+def assigned_laboratories(request):
+    technician = get_object_or_404(Technician, user=request.user)
 
     assigned_rooms = LabRoom.objects.filter(
         computerunit__inspection__technician=technician
     ).distinct()
 
-    total_labs = assigned_rooms.count()
-
-    total_inspections = Inspection.objects.filter(technician=technician)
-
-    pending_inspections = total_inspections.filter(status='Pending').count()
-    completed_inspections = total_inspections.filter(status='Completed').count()
-
-    context = {
-        "assigned_rooms": assigned_rooms[:5],
-        "total_labs": total_labs,
-        "pending_inspections": pending_inspections,
-        "completed_inspections": completed_inspections,
-    }
-
-    return render(request, 'technician/dashboard.html', context)
-
-def assigned_laboratories(request):
-    technician = Technician.objects.get_or_create(name="Default Tech")
-    # technician = Technician.objects.get(email=request.user.email)
-    assigned_rooms = LabRoom.object.filter(
-        computerunit_inspection__technician=technician
-    ).distinct()
-
     return render(request, 'technician/assigned_laboratories.html', {
-            'assigned_rooms': assigned_rooms
-        })
+        'assigned_rooms': assigned_rooms
+    })
 
 def unit_inspections(request, room_id):
     technician = Technician.objects.get(email=request.user.email)
@@ -568,14 +525,89 @@ def unit_inspections(request, room_id):
 
     return render(request, 'technician/unit_inspection.html', context)
 
+@login_required
+def inspection_form(request):
+    # All labs and periods for dropdowns
+    labs = LabRoom.objects.all().order_by('room_name')
+    periods = AssessmentPeriod.objects.all().order_by('-date_start')
 
+    # Defaults
+    units = []
+    selected_lab_id = request.GET.get('lab') or request.POST.get('lab')
+    selected_unit_id = request.POST.get('unit')
+    selected_period_id = request.POST.get('period')
+
+    # Filter units if a lab is selected
+    if selected_lab_id:
+        units = ComputerUnit.objects.filter(room_id=selected_lab_id)
+    else:
+        units = []
+
+    if request.method == "POST":
+        lab_id = request.POST.get("lab")
+        unit_id = request.POST.get("unit")
+        period_id = request.POST.get("period")
+        hardware_condition = request.POST.get("hardware")
+        software_condition = request.POST.get("software")
+        equipment_status = request.POST.get("equip")
+        remarks = request.POST.get("remarks", "")
+
+        # Validate selections
+        if not lab_id or not unit_id or not period_id:
+            messages.error(request, "Please select a lab, unit, and period.")
+            return render(request, "technician/form.html", {
+                "labs": labs,
+                "units": units,
+                "periods": periods,
+                "selected_lab_id": int(lab_id) if lab_id else None,
+                "selected_unit_id": int(unit_id) if unit_id else None,
+                "selected_period_id": int(period_id) if period_id else None,
+            })
+
+        # Get objects safely
+        lab = get_object_or_404(LabRoom, id=lab_id)
+        unit = get_object_or_404(ComputerUnit, id=unit_id)
+        period = get_object_or_404(AssessmentPeriod, id=period_id)
+        technician = Technician.objects.get(user=request.user)
+
+        # Create or update inspection
+        inspection, _ = Inspection.objects.get_or_create(
+            unit=unit,
+            period=period,
+            defaults={'technician': technician, 'date_checked': date.today()}
+        )
+
+        # Create or update condition rating
+        ConditionRating.objects.update_or_create(
+            inspection=inspection,
+            defaults={
+                'hardware_condition': hardware_condition,
+                'software_condition': software_condition,
+                'equipment_status': equipment_status,
+                'remarks': remarks
+            }
+        )
+
+        messages.success(request, f"Inspection for {unit.asset_tag} recorded successfully.")
+        return redirect('assigned_laboratories')
+
+    # Render the form
+    return render(request, "technician/form.html", {
+        "labs": labs,
+        "units": units,
+        "periods": periods,
+        "selected_lab_id": int(selected_lab_id) if selected_lab_id else None,
+        "selected_unit_id": int(selected_unit_id) if selected_unit_id else None,
+        "selected_period_id": int(selected_period_id) if selected_period_id else None,
+    })
+
+@login_required
 def inspection_history(request):
-    technician = Technician.objects.get(email=request.user.email)
-
-    inspections = Inspection.objects.filter(
-        technician=technician
-    ).select_related('unit', 'period').order_by('-date_checked')
+    inspections = Inspection.objects.select_related(
+        'unit', 'technician', 'period'
+    ).prefetch_related('conditionrating_set').order_by('-date_checked')
 
     return render(request, 'technician/inspection_history.html', {
         "inspections": inspections
     })
+
